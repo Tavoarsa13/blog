@@ -12,6 +12,8 @@ use App\Post;
 use App\Category;
 use App\Tag;
 
+use Illuminate\Support\Facades\Storage;
+
 class PostController extends Controller
 {
     public function __construct(){
@@ -53,6 +55,17 @@ class PostController extends Controller
     public function store(PostStoreRequest $request)
     {
         $post= Post::create($request->all());
+        //Image
+        if($request->file('file')){
+            $path= Storage::disk('public')->put('image',$request->file('file'));
+
+            $post->fill(['file'=>asset($path)])->save();//asse... crea la ruta completa donde se guarda laimage
+        }
+        //tags
+
+        $post->tags()->attach($request->get('tags'));//syc: sincroniza la relacion que hay entre post y etiquetas //evalua para saber si la relacion esta 
+
+
         return redirect()->route('posts.edit',$post->id)//redireciona y envia el id de la etiqueta que recien se creo
             ->with('info','Entrada creada con éxito');
     }
@@ -90,10 +103,21 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(PostUpdateRequest $request, $id)
+    public function update(PostStoreRequest $request, $id)
     {
         $post= Post::find($id);
         $post->fill($request->all())->save();
+
+          //Image
+        if($request->file('file')){
+            $path= Storage::disk('public')->put('image',$request->file('file'));
+
+            $post->fill(['file'=>asset($path)])->save();//asse... crea la ruta completa donde se guarda laimage
+        }
+        //tags
+
+        $post->tags()->sync($request->get('tags'));//syc: sincroniza la relacion que hay entre post y etiquetas //evalua para saber si la relacion esta 
+
         return redirect()->route('posts.edit',$post->id)//redireciona y envia el id de la etiqueta que recien se creo
             ->with('info','Entrada actualizada con éxito');
     }

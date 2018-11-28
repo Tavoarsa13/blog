@@ -23,14 +23,14 @@ class PostStoreRequest extends FormRequest
      */
     public function rules()
     {
-        $rules [
-            'name' => 'required',
-            'slug' => 'required|unique:posts,slug',
-            'user_id' => 'required|integer',
-            'category_id' => 'required|integer',
-            'tags' => 'required|array',
-            'body' => 'required',
-            'status' => 'required|in:DRAFT,PUBLISHED',
+        $rules = [
+            'name'           => 'required',
+            'slug'           => 'required|unique:posts,slug',
+            'user_id'        => 'required|integer',
+            'category_id'    => 'required|integer',
+            'tags'           => 'required|array',
+            'body'           => 'required',
+            'status'         => 'required|in:DRAFT,PUBLISHED'
 
         ];
         if($this->get('file'))
