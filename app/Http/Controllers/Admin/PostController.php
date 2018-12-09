@@ -9,6 +9,10 @@ use App\Http\Requests\PostStoreRequest;
 use App\Http\Requests\PostUpdateRequest;
 
 use App\Post;
+use App\Category;
+use App\Tag;
+
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -24,7 +28,9 @@ class PostController extends Controller
     public function index()
     {
 
-        $posts= Post::orderBy('id','DESC')->paginate();//dd($posts);
+        $posts= Post::orderBy('id','DESC')
+            ->where('user_id',auth()->user()->id)
+            ->paginate();//dd($posts);
         return view('admin.posts.index',compact('posts'));//array   
     }
 
@@ -35,7 +41,9 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('admin.posts.create');
+        $categories=Category::orderBy('name','ASC')->pluck('name','id');
+        $tags=Tag::orderBy('name','ASC')->get();
+        return view('admin.posts.create',compact('categories','tags'));
     }
 
     /**
@@ -47,6 +55,17 @@ class PostController extends Controller
     public function store(PostStoreRequest $request)
     {
         $post= Post::create($request->all());
+        //Image
+        if($request->file('file')){
+            $path= Storage::disk('public')->put('image',$request->file('file'));
+
+            $post->fill(['file'=>asset($path)])->save();//asse... crea la ruta completa donde se guarda laimage
+        }
+        //tags
+
+        $post->tags()->attach($request->get('tags'));//syc: sincroniza la relacion que hay entre post y etiquetas //evalua para saber si la relacion esta 
+
+
         return redirect()->route('posts.edit',$post->id)//redireciona y envia el id de la etiqueta que recien se creo
             ->with('info','Entrada creada con éxito');
     }
@@ -71,8 +90,10 @@ class PostController extends Controller
      */
     public function edit($id)
     {
+        $categories=Category::orderBy('name','ASC')->pluck('name','id');
+        $tags=Tag::orderBy('name','ASC')->get();
         $post=Post::find($id);
-        return view('admin.posts.edit',compact('post'));
+        return view('admin.posts.edit',compact('post','categories','tags'));
     }
 
     /**
@@ -82,10 +103,21 @@ class PostController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(PostUpdateRequest $request, $id)
+    public function update(PostStoreRequest $request, $id)
     {
         $post= Post::find($id);
         $post->fill($request->all())->save();
+
+          //Image
+        if($request->file('file')){
+            $path= Storage::disk('public')->put('image',$request->file('file'));
+
+            $post->fill(['file'=>asset($path)])->save();//asse... crea la ruta completa donde se guarda laimage
+        }
+        //tags
+
+        $post->tags()->sync($request->get('tags'));//syc: sincroniza la relacion que hay entre post y etiquetas //evalua para saber si la relacion esta 
+
         return redirect()->route('posts.edit',$post->id)//redireciona y envia el id de la etiqueta que recien se creo
             ->with('info','Entrada actualizada con éxito');
     }

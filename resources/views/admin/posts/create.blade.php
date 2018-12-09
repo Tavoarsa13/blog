@@ -10,7 +10,7 @@
 				</div>			
 			
 				<div class="panel-body">
-					{!!Form::open(['route'=>'posts.store'])!!}
+					{!!Form::open(['route'=>'posts.store','files'=>true])!!}
 						@include('admin.posts.partials.form')
 					{!!Form::close()!!}
 				
